@@ -2,15 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "analysis",
+            "name": "Common Debug",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/data/AIDS_700/analysis.py",
+            "program": "${file}",
             "console": "integratedTerminal",
             "cwd": "${fileDirname}",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
-        }
+        },
     ]
 }

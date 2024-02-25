@@ -1,2 +1,4 @@
-data
+data/*/json
+data/AIDS_700/onehot
+TaGED.json
 __pycache__
