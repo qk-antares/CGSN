@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torch_geometric.nn.dense.dense_gcn_conv import DenseGCNConv
 
 from experiments.batch.model.common.DenseTensorNetwork import DenseTensorNetwork
-from experiments.batch.model.graphsim.GConv import GConv
+from experiments.batch.model.cgsn.GConv import GConv
 from experiments.batch.model.simgnn.DenseAttentionModule import DenseAttentionModule
 
 
