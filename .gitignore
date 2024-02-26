@@ -2,4 +2,4 @@ data/*/json
 data/AIDS_700/onehot
 TaGED.json
 __pycache__
-model_save
+models_dir

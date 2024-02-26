@@ -9,9 +9,9 @@ from experiments.batch.model.cgsn.GConv import GConv
 from experiments.batch.model.cgsn.Sinkhorn import Sinkhorn
 
 
-class GraphSimCrossGraph(nn.Module):
+class CGSN(nn.Module):
     def __init__(self, args, onehot_dim):
-        super(GraphSimCrossGraph, self).__init__()
+        super(CGSN, self).__init__()
         self.args = args
         self.onehot_dim = onehot_dim
         self.setup_layers()
@@ -32,17 +32,12 @@ class GraphSimCrossGraph(nn.Module):
         for i in range(1, self.gnn_numbers):
             setattr(self, 'gnn{}'.format(i + 1), GConv(**gnn_settings[i]))
 
-        # 与gnn对应的affinity模块
-        affinity_settings = [dict(d=gnn_filters[i]) for i in range(0, self.gnn_numbers)]
-        for i in range(0, self.gnn_numbers):
-            setattr(self, 'affinity{}'.format(i + 1), Affinity(**affinity_settings[i]))
-
+        # affinity模块
+        self.affinity = Affinity(d=gnn_filters[-2])
         # sinkhorn模块
         self.sinkhorn = Sinkhorn(max_iter=self.args.max_iter, tau=self.args.tau, epsilon=self.args.epsilon)
-
         # cross_graph模块
-        for i in range(0, self.gnn_numbers):
-            setattr(self, 'cross_graph{}'.format(i + 1), nn.Linear(gnn_filters[i] * 2, gnn_filters[i]))
+        self.cross_graph = nn.Linear(gnn_filters[-2] * 2, gnn_filters[-2])
 
         # 得到图嵌入的att模块
         self.attn_pool_1 = DenseAttentionModule(gnn_filters[-1])
@@ -70,15 +65,14 @@ class GraphSimCrossGraph(nn.Module):
             gnn_layer = getattr(self, 'gnn{}'.format(i))
             emb1, emb2 = gnn_layer(emb1, adj1), gnn_layer(emb2, adj2)
 
-            affinity = getattr(self, 'affinity{}'.format(i))
-            s = affinity(emb1, emb2)
-            s = self.sinkhorn(s, torch.sum(mask1, dim=1), torch.sum(mask2, dim=1), dummy_row=True)
+            if i == self.gnn_numbers - 1:
+                s = self.affinity(emb1, emb2)
+                s = self.sinkhorn(s, torch.sum(mask1, dim=1), torch.sum(mask2, dim=1), dummy_row=True)
 
-            cross_graph = getattr(self, 'cross_graph{}'.format(i))
-            new_emb1 = cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
-            new_emb2 = cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
-            emb1 = new_emb1
-            emb2 = new_emb2
+                new_emb1 = self.cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
+                new_emb2 = self.cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                emb1 = new_emb1
+                emb2 = new_emb2
         return emb1, emb2
 
     def forward(self, batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,

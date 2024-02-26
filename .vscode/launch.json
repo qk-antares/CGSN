@@ -2,6 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Batch Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/experiments/batch/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/experiments/batch",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
             "name": "Common Debug",
             "type": "debugpy",
             "request": "launch",

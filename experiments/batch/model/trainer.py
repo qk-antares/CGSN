@@ -1,3 +1,4 @@
+import os
 import random
 import sys
 import time
@@ -9,10 +10,10 @@ from scipy.stats import spearmanr, kendalltau
 from texttable import Texttable
 from tqdm import tqdm
 
-from experiments.batch.model.cgsn.GraphSim import GraphSim
-from experiments.batch.model.cgsn.GraphSimCrossGraph import GraphSimCrossGraph
-from experiments.batch.model.cgsn.GraphSimGCN import GraphSimGCN
-from experiments.batch.model.cgsn.GraphSimOneAtt import GraphSimOneAtt
+from experiments.batch.model.cgsn.CGSN import CGSN
+from experiments.batch.model.cgsn.CGSNImproved import CGSNImproved
+from experiments.batch.model.cgsn.CGSNGCN import CGSNGCN
+from experiments.batch.model.cgsn.CGSNOneAtt import CGSNOneAtt
 from experiments.batch.model.simgnn.SimGNN import SimGNN
 from experiments.batch.model.simgnn.SimGNNGConv import SimGNNGConv
 from utils.Dataset import Dataset
@@ -32,14 +33,14 @@ class Trainer(object):
         self.setup_model()
 
     def setup_model(self):
-        if self.args.model_name == "GraphSim":
-            self.model = GraphSim(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == "GraphSimGCN":
-            self.model = GraphSimGCN(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == "GraphSimOneAtt":
-            self.model = GraphSimOneAtt(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == 'GraphSimCrossGraph':
-            self.model = GraphSimCrossGraph(self.args, self.dataset.onehot_dim).to(self.device)
+        if self.args.model_name == "CGSN":
+            self.model = CGSN(self.args, self.dataset.onehot_dim).to(self.device)
+        elif self.args.model_name == "CGSNGCN":
+            self.model = CGSNGCN(self.args, self.dataset.onehot_dim).to(self.device)
+        elif self.args.model_name == "CGSNOneAtt":
+            self.model = CGSNOneAtt(self.args, self.dataset.onehot_dim).to(self.device)
+        elif self.args.model_name == 'CGSNImproved':
+            self.model = CGSNImproved(self.args, self.dataset.onehot_dim).to(self.device)
         elif self.args.model_name == "SimGNN":
             self.model = SimGNN(self.args, self.dataset.onehot_dim).to(self.device)
         elif self.args.model_name == "SimGNNGConv":
@@ -250,8 +251,11 @@ class Trainer(object):
         :param epoch:
         :return:
         """
-        torch.save(self.model.state_dict(),
-                   f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}')
+            # 检查目录是否存在，如果不存在则创建
+        models_path = f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/'
+        if not os.path.exists(models_path):
+            os.makedirs(models_path)
+        torch.save(self.model.state_dict(), f'{models_path}{str(epoch)}')
 
     def load(self, epoch):
         """

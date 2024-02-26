@@ -9,9 +9,9 @@ from experiments.batch.model.cgsn.GConv import GConv
 from experiments.batch.model.cgsn.Sinkhorn import Sinkhorn
 
 
-class GraphSim(nn.Module):
+class CGSNOneAtt(nn.Module):
     def __init__(self, args, onehot_dim):
-        super(GraphSim, self).__init__()
+        super(CGSNOneAtt, self).__init__()
         self.args = args
         self.onehot_dim = onehot_dim
         self.setup_layers()
@@ -34,14 +34,15 @@ class GraphSim(nn.Module):
 
         # affinity模块
         self.affinity = Affinity(d=gnn_filters[-2])
+
         # sinkhorn模块
         self.sinkhorn = Sinkhorn(max_iter=self.args.max_iter, tau=self.args.tau, epsilon=self.args.epsilon)
+
         # cross_graph模块
-        self.cross_graph = nn.Linear(gnn_filters[-2] * 2, gnn_filters[-2])
+        setattr(self, "cross_graph", nn.Linear(gnn_filters[-2] * 2, gnn_filters[-2]))
 
         # 得到图嵌入的att模块
-        self.attn_pool_1 = DenseAttentionModule(gnn_filters[-1])
-        self.attn_pool_2 = DenseAttentionModule(gnn_filters[-1])
+        self.attn_pool = DenseAttentionModule(gnn_filters[-1])
 
         # 图图交互的ntn模块
         self.tensor_network = DenseTensorNetwork(gnn_filters[-1], self.args.tensor_neurons)
@@ -69,8 +70,9 @@ class GraphSim(nn.Module):
                 s = self.affinity(emb1, emb2)
                 s = self.sinkhorn(s, torch.sum(mask1, dim=1), torch.sum(mask2, dim=1), dummy_row=True)
 
-                new_emb1 = self.cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
-                new_emb2 = self.cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                cross_graph = getattr(self, 'cross_graph')
+                new_emb1 = cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
+                new_emb2 = cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
                 emb1 = new_emb1
                 emb2 = new_emb2
         return emb1, emb2
@@ -92,8 +94,8 @@ class GraphSim(nn.Module):
         emb1, emb2 = self.forward_att_feat_agg_layers(batch_feat_1, batch_adj_1, batch_mask_1,
                                                       batch_feat_2, batch_adj_2, batch_mask_2)
 
-        graph_emb1 = self.attn_pool_1(emb1, batch_mask_1)
-        graph_emb2 = self.attn_pool_2(emb1, batch_mask_2)
+        graph_emb1 = self.attn_pool(emb1, batch_mask_1)
+        graph_emb2 = self.attn_pool(emb2, batch_mask_2)
 
         scores = self.tensor_network(graph_emb1, graph_emb2)
 
