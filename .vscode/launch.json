@@ -24,6 +24,17 @@
             }
         },
         {
+            "name": "Origin Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/experiments/origin/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/experiments/origin",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
             "name": "Common Debug",
             "type": "debugpy",
             "request": "launch",

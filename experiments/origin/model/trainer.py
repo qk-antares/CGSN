@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import sys
 import time
@@ -445,8 +446,11 @@ class Trainer(object):
         :param epoch:
         :return:
         """
-        torch.save(self.model.state_dict(),
-                   f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}')
+        # 检查目录是否存在，如果不存在则创建
+        models_path = f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/'
+        if not os.path.exists(models_path):
+            os.makedirs(models_path)
+        torch.save(self.model.state_dict(), f'{models_path}{str(epoch)}')
 
     def load(self, epoch):
         """
@@ -455,4 +459,4 @@ class Trainer(object):
         :return:
         """
         self.model.load_state_dict(
-            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}'))
+            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/{str(epoch)}'))
