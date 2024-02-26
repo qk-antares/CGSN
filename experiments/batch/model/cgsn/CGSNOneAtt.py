@@ -34,12 +34,10 @@ class CGSNOneAtt(nn.Module):
 
         # affinity模块
         self.affinity = Affinity(d=gnn_filters[-2])
-
         # sinkhorn模块
         self.sinkhorn = Sinkhorn(max_iter=self.args.max_iter, tau=self.args.tau, epsilon=self.args.epsilon)
-
         # cross_graph模块
-        setattr(self, "cross_graph", nn.Linear(gnn_filters[-2] * 2, gnn_filters[-2]))
+        self.cross_graph = nn.Linear(gnn_filters[-2] * 2, gnn_filters[-2])
 
         # 得到图嵌入的att模块
         self.attn_pool = DenseAttentionModule(gnn_filters[-1])
@@ -55,12 +53,6 @@ class CGSNOneAtt(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward_gnn(self, feat, adj, i):
-        feat_out = getattr(self, 'gnn{}'.format(i))(x=feat, adj=adj)
-        feat_out = F.relu(feat_out, inplace=True)
-        feat_out = F.dropout(feat_out, p=self.args.dropout, training=self.training)
-        return feat_out
-
     def forward_att_feat_agg_layers(self, emb1, adj1, mask1, emb2, adj2, mask2):
         for i in range(1, self.gnn_numbers + 1):
             gnn_layer = getattr(self, 'gnn{}'.format(i))
@@ -70,9 +62,8 @@ class CGSNOneAtt(nn.Module):
                 s = self.affinity(emb1, emb2)
                 s = self.sinkhorn(s, torch.sum(mask1, dim=1), torch.sum(mask2, dim=1), dummy_row=True)
 
-                cross_graph = getattr(self, 'cross_graph')
-                new_emb1 = cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
-                new_emb2 = cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
+                new_emb1 = self.cross_graph(torch.cat((emb1, torch.bmm(s, emb2)), dim=-1))
+                new_emb2 = self.cross_graph(torch.cat((emb2, torch.bmm(s.transpose(1, 2), emb1)), dim=-1))
                 emb1 = new_emb1
                 emb2 = new_emb2
         return emb1, emb2

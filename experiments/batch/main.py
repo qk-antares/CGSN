@@ -8,7 +8,7 @@ def main():
     args = parser.parse_args()
 
     # args.__setattr__("histogram", False)
-    args.__setattr__("epoch_start", 8)
+    # args.__setattr__("epoch_start", 8)
     # args.__setattr__("model_train", False)
     args.__setattr__("model_name", "CGSN")
     args.__setattr__("dataset", "AIDS_700")

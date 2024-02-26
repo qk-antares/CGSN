@@ -93,7 +93,7 @@ class CGSN(nn.Module):
                                                       batch_feat_2, batch_adj_2, batch_mask_2)
 
         graph_emb1 = self.attn_pool_1(emb1, batch_mask_1)
-        graph_emb2 = self.attn_pool_2(emb1, batch_mask_2)
+        graph_emb2 = self.attn_pool_2(emb2, batch_mask_2)
 
         scores = self.tensor_network(graph_emb1, graph_emb2)
 

@@ -41,12 +41,6 @@ class CGSNSingleLayer(nn.Module):
             nn.Sigmoid()
         )
 
-    def forward_gnn(self, feat, adj, i):
-        feat_out = getattr(self, 'gnn{}'.format(i))(x=feat, adj=adj)
-        feat_out = F.relu(feat_out, inplace=True)
-        feat_out = F.dropout(feat_out, p=self.args.dropout, training=self.training)
-        return feat_out
-
     def forward_att_feat_agg_layers(self, emb1, adj1, mask1, emb2, adj2, mask2):
         # 图内更新
         inter_emb1, inter_emb2 = self.g_conv(emb1, adj1), self.g_conv(emb2, adj2)
@@ -79,7 +73,7 @@ class CGSNSingleLayer(nn.Module):
                                                       batch_feat_2, batch_adj_2, batch_mask_2)
 
         graph_emb1 = self.attn_pool_1(emb1, batch_mask_1)
-        graph_emb2 = self.attn_pool_2(emb1, batch_mask_2)
+        graph_emb2 = self.attn_pool_2(emb2, batch_mask_2)
 
         scores = self.tensor_network(graph_emb1, graph_emb2)
 
