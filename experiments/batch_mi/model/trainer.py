@@ -1,3 +1,4 @@
+import os
 import random
 import sys
 import time
@@ -8,8 +9,8 @@ from scipy.stats import spearmanr, kendalltau
 from texttable import Texttable
 from tqdm import tqdm
 
-from experiments.batch_mi.model.graphsim.CGSN import CGSN
-from experiments.batch_mi.model.graphsim.CGSNSingleLayer import CGSNSingleLayer
+from experiments.batch_mi.model.cgsn.CGSN import CGSN
+from experiments.batch_mi.model.cgsn.CGSNSingleLayer import CGSNSingleLayer
 from experiments.batch_mi.model.simgnn.SimGNN import SimGNN
 from utils.Dataset import Dataset
 import torch.nn.functional as F
@@ -263,8 +264,11 @@ class Trainer(object):
         :param epoch:
         :return:
         """
-        torch.save(self.model.state_dict(),
-                   f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}')
+        # 检查目录是否存在，如果不存在则创建
+        models_path = f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/'
+        if not os.path.exists(models_path):
+            os.makedirs(models_path)
+        torch.save(self.model.state_dict(), f'{models_path}{str(epoch)}')
 
     def load(self, epoch):
         """
@@ -273,4 +277,4 @@ class Trainer(object):
         :return:
         """
         self.model.load_state_dict(
-            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}'))
+            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/{str(epoch)}'))

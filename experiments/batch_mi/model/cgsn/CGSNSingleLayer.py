@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from experiments.batch_mi.model.common.DenseTensorNetwork import DenseTensorNetwork
-from experiments.batch_mi.model.graphsim.Affinity import Affinity
-from experiments.batch_mi.model.graphsim.DenseAttentionModule import DenseAttentionModule
-from experiments.batch_mi.model.graphsim.GConv import GConv
-from experiments.batch_mi.model.graphsim.Sinkhorn import Sinkhorn
+from experiments.batch_mi.model.cgsn.Affinity import Affinity
+from experiments.batch_mi.model.cgsn.DenseAttentionModule import DenseAttentionModule
+from experiments.batch_mi.model.cgsn.GConv import GConv
+from experiments.batch_mi.model.cgsn.Sinkhorn import Sinkhorn
 
 class CGSNSingleLayer(nn.Module):
     def __init__(self, args, onehot_dim):

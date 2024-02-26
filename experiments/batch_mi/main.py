@@ -7,8 +7,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    args.__setattr__("model_name", "GraphSim")
-    args.__setattr__("dataset", "IMDB")
+    args.__setattr__("model_name", "SimGNN")
+    args.__setattr__("dataset", "AIDS_700")
     # args.__setattr__("gnn_filters", 64)
 
     # 如果提供了配置文件路径，从配置文件中读取参数并更新

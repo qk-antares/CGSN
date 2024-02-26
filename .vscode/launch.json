@@ -13,6 +13,17 @@
             }
         },
         {
+            "name": "BatchMI Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/experiments/batch_mi/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/experiments/batch_mi",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
             "name": "Common Debug",
             "type": "debugpy",
             "request": "launch",
