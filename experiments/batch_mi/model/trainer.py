@@ -1,22 +1,18 @@
-import os
 import random
 import sys
 import time
 
 import numpy as np
 import torch.cuda
-import torch.nn.functional as F
 from scipy.stats import spearmanr, kendalltau
 from texttable import Texttable
 from tqdm import tqdm
 
-from experiments.batch.model.cgsn.CGSN import CGSN
-from experiments.batch.model.cgsn.CGSNImproved import CGSNImproved
-from experiments.batch.model.cgsn.CGSNGCN import CGSNGCN
-from experiments.batch.model.cgsn.CGSNOneAtt import CGSNOneAtt
-from experiments.batch.model.simgnn.SimGNN import SimGNN
-from experiments.batch.model.simgnn.SimGNNGConv import SimGNNGConv
+from experiments.batch_mi.model.graphsim.CGSN import CGSN
+from experiments.batch_mi.model.graphsim.CGSNSingleLayer import CGSNSingleLayer
+from experiments.batch_mi.model.simgnn.SimGNN import SimGNN
 from utils.Dataset import Dataset
+import torch.nn.functional as F
 
 
 class Trainer(object):
@@ -24,6 +20,7 @@ class Trainer(object):
         self.args = args
 
         self.cur_epoch = args.epoch_start
+        self.results = []
         self.use_gpu = args.use_gpu
         print("use_gpu =", self.use_gpu)
         self.device = torch.device('cuda') if self.use_gpu else torch.device('cpu')
@@ -35,16 +32,10 @@ class Trainer(object):
     def setup_model(self):
         if self.args.model_name == "CGSN":
             self.model = CGSN(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == "CGSNGCN":
-            self.model = CGSNGCN(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == "CGSNOneAtt":
-            self.model = CGSNOneAtt(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == 'CGSNImproved':
-            self.model = CGSNImproved(self.args, self.dataset.onehot_dim).to(self.device)
         elif self.args.model_name == "SimGNN":
             self.model = SimGNN(self.args, self.dataset.onehot_dim).to(self.device)
-        elif self.args.model_name == "SimGNNGConv":
-            self.model = SimGNNGConv(self.args, self.dataset.onehot_dim).to(self.device)
+        elif self.args.model_name == "CGSNSingleLayer":
+            self.model = CGSNSingleLayer(self.args, self.dataset.onehot_dim).to(self.device)
         else:
             assert False
 
@@ -145,12 +136,33 @@ class Trainer(object):
         self.optimizer.zero_grad()
         losses = torch.tensor([0]).float().to(self.device)
 
-        (batch_feat_1, batch_adj_1, batch_mask_1,
-         batch_feat_2, batch_adj_2, batch_mask_2,
-         batch_avg_v, batch_hb, batch_target_similarity, _) = self.dataset.get_batch_data(batch)
-        pre_similarity, _ = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
-                                       batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
-        losses = losses + len(batch) * F.mse_loss(batch_target_similarity, pre_similarity)
+        if self.args.model_name == "SimGNN":
+            (batch_feat_1, batch_adj_1, batch_mask_1,
+             batch_feat_2, batch_adj_2, batch_mask_2,
+             batch_avg_v, batch_hb, batch_target_similarity, _) = self.dataset.get_batch_data(batch)
+            pre_similarity, pre_ged, kl_loss = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
+                                                          batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
+            losses = losses + self.args.lamb * torch.sum(kl_loss) + len(batch) * F.mse_loss(
+                batch_target_similarity, pre_similarity)
+        elif self.args.model_name == "CGSN":
+            # todo: 待实现
+            (batch_feat_1, batch_adj_1, batch_mask_1,
+             batch_feat_2, batch_adj_2, batch_mask_2,
+             batch_avg_v, batch_hb, batch_target_similarity, _) = self.dataset.get_batch_data(batch)
+            pre_similarity, pre_ged, kl_loss = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
+                                                          batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
+            losses = losses + self.args.lamb * torch.sum(kl_loss) + len(batch) * F.mse_loss(
+                batch_target_similarity, pre_similarity)
+        elif self.args.model_name == "CGSNSingleLayer":
+            (batch_feat_1, batch_adj_1, batch_mask_1,
+             batch_feat_2, batch_adj_2, batch_mask_2,
+             batch_avg_v, batch_hb, batch_target_similarity, _) = self.dataset.get_batch_data(batch)
+            pre_similarity, pre_ged, kl_loss = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
+                                                          batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
+            losses = losses + self.args.lamb * torch.sum(kl_loss) + len(batch) * F.mse_loss(
+                batch_target_similarity, pre_similarity)
+        else:
+            assert False
 
         losses.backward()
         self.optimizer.step()
@@ -193,8 +205,8 @@ class Trainer(object):
             (batch_feat_1, batch_adj_1, batch_mask_1,
              batch_feat_2, batch_adj_2, batch_mask_2,
              batch_avg_v, batch_hb, batch_target_similarity, batch_target_ged) = self.dataset.get_batch_data(batch)
-            pre_similarity, pre_ged = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
-                                                 batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
+            pre_similarity, pre_ged, _ = self.model(batch_feat_1, batch_feat_2, batch_adj_1, batch_adj_2,
+                                                   batch_mask_1, batch_mask_2, batch_avg_v, batch_hb)
             # 四舍五入
             round_pre_ged = torch.round(pre_ged)
             # 统计GED 准确命中/feasible 的个数
@@ -251,11 +263,8 @@ class Trainer(object):
         :param epoch:
         :return:
         """
-            # 检查目录是否存在，如果不存在则创建
-        models_path = f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/'
-        if not os.path.exists(models_path):
-            os.makedirs(models_path)
-        torch.save(self.model.state_dict(), f'{models_path}{str(epoch)}')
+        torch.save(self.model.state_dict(),
+                   f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}')
 
     def load(self, epoch):
         """
@@ -264,4 +273,4 @@ class Trainer(object):
         :return:
         """
         self.model.load_state_dict(
-            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/models_dir/{str(epoch)}'))
+            torch.load(f'{self.args.model_path}/{self.args.model_name}/{self.args.dataset}/{str(epoch)}'))
