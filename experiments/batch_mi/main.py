@@ -7,7 +7,7 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    args.__setattr__("model_name", "CGSN")
+    args.__setattr__("model_name", "SimGNN")
     args.__setattr__("dataset", "Linux")
     # args.__setattr__("gnn_filters", 64)
 
