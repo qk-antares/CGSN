@@ -14,6 +14,17 @@ class TaGSim(nn.Module):
         super(TaGSim, self).__init__()
         self.args = args
         self.number_labels = number_of_labels
+
+        gnn_filters = [int(n_filter) for n_filter in self.args.gnn_filters.split('-')]
+        self.filters_1 = gnn_filters[0]
+        self.filters_2 = gnn_filters[1]
+        self.filters_3 = gnn_filters[2]
+        
+        reg_neurons = [int(neurons) for neurons in self.args.reg_neurons.split('-')]
+        self.bottle_neck_neurons_1 = reg_neurons[0]
+        self.bottle_neck_neurons_2 = reg_neurons[1]
+        self.bottle_neck_neurons_3 = reg_neurons[2]
+
         self.setup_layers()
 
     def setup_layers(self):
@@ -21,22 +32,22 @@ class TaGSim(nn.Module):
         self.gal2 = GraphAggregationLayer()
         self.feature_count = self.args.tensor_neurons
 
-        self.tensor_network_nc = TensorNetworkModule(self.args, 2 * self.number_labels)
-        self.tensor_network_in = TensorNetworkModule(self.args, 2 * self.number_labels)
-        self.tensor_network_ie = TensorNetworkModule(self.args, 2 * self.number_labels)
+        self.tensor_network_nc = TensorNetworkModule(2 * self.number_labels, self.args.tensor_neurons)
+        self.tensor_network_in = TensorNetworkModule(2 * self.number_labels, self.args.tensor_neurons)
+        self.tensor_network_ie = TensorNetworkModule(2 * self.number_labels, self.args.tensor_neurons)
 
-        self.fully_connected_first_nc = torch.nn.Linear(self.feature_count, self.args.bottle_neck_neurons)
-        self.fully_connected_second_nc = torch.nn.Linear(self.args.bottle_neck_neurons, 8)
+        self.fully_connected_first_nc = torch.nn.Linear(self.feature_count, self.bottle_neck_neurons_1)
+        self.fully_connected_second_nc = torch.nn.Linear(self.bottle_neck_neurons_1, 8)
         self.fully_connected_third_nc = torch.nn.Linear(8, 4)
         self.scoring_layer_nc = torch.nn.Linear(4, 1)
 
-        self.fully_connected_first_in = torch.nn.Linear(self.feature_count, self.args.bottle_neck_neurons)
-        self.fully_connected_second_in = torch.nn.Linear(self.args.bottle_neck_neurons, 8)
+        self.fully_connected_first_in = torch.nn.Linear(self.feature_count, self.bottle_neck_neurons_1)
+        self.fully_connected_second_in = torch.nn.Linear(self.bottle_neck_neurons_1, 8)
         self.fully_connected_third_in = torch.nn.Linear(8, 4)
         self.scoring_layer_in = torch.nn.Linear(4, 1)
 
-        self.fully_connected_first_ie = torch.nn.Linear(self.feature_count, self.args.bottle_neck_neurons)
-        self.fully_connected_second_ie = torch.nn.Linear(self.args.bottle_neck_neurons, 8)
+        self.fully_connected_first_ie = torch.nn.Linear(self.feature_count, self.bottle_neck_neurons_1)
+        self.fully_connected_second_ie = torch.nn.Linear(self.bottle_neck_neurons_1, 8)
         self.fully_connected_third_ie = torch.nn.Linear(8, 4)
         self.scoring_layer_ie = torch.nn.Linear(4, 1)
 

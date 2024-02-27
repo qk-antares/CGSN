@@ -15,6 +15,7 @@ from tqdm import tqdm
 from experiments.origin.model.gedgnn.GedGNN import GedGNN
 from experiments.origin.model.gedgnn.GedMatrixModule import fixed_mapping_loss
 from experiments.origin.model.simgnn.SimGNN import SimGNN
+from experiments.origin.model.tagsim.TaGSim import TaGSim
 from utils.data_loader import load_all_graphs, load_ged
 
 
@@ -42,6 +43,8 @@ class Trainer(object):
             else:
                 self.args.value_loss_weight = 1.0
             self.model = GedGNN(self.args, self.onehot_dim).to(self.device)
+        elif self.args.model_name == "TaGSim":
+            self.model = TaGSim(self.args, self.onehot_dim).to(self.device)
         else:
             assert False
 
@@ -224,13 +227,6 @@ class Trainer(object):
                 target = data["target"]
                 prediction, _ = self.model(data)
                 losses = losses + torch.nn.functional.mse_loss(target, prediction)
-        elif self.args.model_name == "GraphSim":
-            # todo: 待实现
-            for graph_pair in batch:
-                data = self.pack_graph_pair(graph_pair)
-                target = data["target"]
-                prediction, _ = self.model(data)
-                losses = losses + torch.nn.functional.mse_loss(target, prediction)
         elif self.args.model_name == "GedGNN":
             weight = self.args.value_loss_weight
             for graph_pair in batch:
@@ -239,12 +235,11 @@ class Trainer(object):
                 prediction, _, mapping = self.model(data)
                 losses = losses + fixed_mapping_loss(mapping, gt_mapping) + weight * F.mse_loss(target, prediction)
         elif self.args.model_name == "TaGSim":
-            # todo: 待实现
             for graph_pair in batch:
                 data = self.pack_graph_pair(graph_pair)
-                target = data["target"]
+                ta_ged = data["ta_ged"]
                 prediction, _ = self.model(data)
-                losses = losses + torch.nn.functional.mse_loss(target, prediction)
+                losses = losses + torch.nn.functional.mse_loss(ta_ged, prediction)
         else:
             assert False
 
@@ -388,7 +383,11 @@ class Trainer(object):
                 round_pre_ged = round(pre_ged)
                 num += 1
 
-                mse.append((prediction.item() - target) ** 2)
+                if prediction.shape[0] == 1:
+                    mse.append((prediction.item() - target) ** 2)
+                else:  # TaGSim
+                    mse.append(F.mse_loss(prediction, data["ta_ged"]).item())
+
                 pre.append(pre_ged)
                 gt.append(gt_ged)
 

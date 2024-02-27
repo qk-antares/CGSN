@@ -6,13 +6,10 @@ class TensorNetworkModule(nn.Module):
     """
     SimGNN Tensor Network module to calculate similarity vector.
     """
-    def __init__(self, args, input_dim=None):
-        """
-        :param args: Arguments object.
-        """
+    def __init__(self, input_dim, tensor_neurons):
         super(TensorNetworkModule, self).__init__()
-        self.args = args
-        self.input_dim = self.args.filters_3 if (input_dim is None) else input_dim
+        self.input_dim = input_dim
+        self.tensor_neurons = tensor_neurons
         self.setup_weights()
         self.init_parameters()
 
@@ -22,11 +19,11 @@ class TensorNetworkModule(nn.Module):
         """
         self.weight_matrix = torch.nn.Parameter(torch.Tensor(self.input_dim,
                                                              self.input_dim,
-                                                             self.args.tensor_neurons))
+                                                             self.tensor_neurons))
 
-        self.weight_matrix_block = torch.nn.Parameter(torch.Tensor(self.args.tensor_neurons,
+        self.weight_matrix_block = torch.nn.Parameter(torch.Tensor(self.tensor_neurons,
                                                                    2*self.input_dim))
-        self.bias = torch.nn.Parameter(torch.Tensor(self.args.tensor_neurons, 1))
+        self.bias = torch.nn.Parameter(torch.Tensor(self.tensor_neurons, 1))
 
     def init_parameters(self):
         """
@@ -44,7 +41,7 @@ class TensorNetworkModule(nn.Module):
         :return scores: A similarity score vector.
         """
         scoring = torch.mm(torch.t(embedding_1), self.weight_matrix.view(self.input_dim, -1))
-        scoring = scoring.view(self.input_dim, self.args.tensor_neurons)
+        scoring = scoring.view(self.input_dim, self.tensor_neurons)
         scoring = torch.mm(torch.t(scoring), embedding_2)
         combined_representation = torch.cat((embedding_1, embedding_2))
         block_scoring = torch.mm(self.weight_matrix_block, combined_representation)
