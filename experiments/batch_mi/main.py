@@ -7,9 +7,9 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    args.__setattr__("model_name", "CGSNSingleLayer")
-    args.__setattr__("dataset", "AIDS_700")
-    args.__setattr__("gnn_filters", 64)
+    args.__setattr__("model_name", "CGSN")
+    args.__setattr__("dataset", "Linux")
+    # args.__setattr__("gnn_filters", 64)
 
     # 如果提供了配置文件路径，从配置文件中读取参数并更新
     if args.config is not None:
