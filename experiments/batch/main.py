@@ -8,10 +8,10 @@ def main():
     args = parser.parse_args()
 
     # args.__setattr__("histogram", False)
-    # args.__setattr__("epoch_start", 8)
+    args.__setattr__("epoch_start", 19)
     # args.__setattr__("model_train", False)
     args.__setattr__("model_name", "CGSN")
-    args.__setattr__("dataset", "AIDS_700")
+    args.__setattr__("dataset", "IMDB")
 
     # 如果提供了配置文件路径，从配置文件中读取参数并更新
     if args.config is not None:
