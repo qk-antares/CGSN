@@ -35,6 +35,17 @@
             }
         },
         {
+            "name": "ProgramSim Debug",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/experiments/program_sim/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/experiments/program_sim",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
             "name": "Common Debug",
             "type": "debugpy",
             "request": "launch",
