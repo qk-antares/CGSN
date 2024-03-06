@@ -10,8 +10,8 @@ def main():
     # args.__setattr__("histogram", False)
     # args.__setattr__("epoch_start", 19)
     # args.__setattr__("model_train", False)
-    args.__setattr__("model_name", "SimGNN")
-    args.__setattr__("dataset", "IMDB")
+    args.__setattr__("model_name", "CGSNGin")
+    args.__setattr__("dataset", "AIDS_700")
 
     # 如果提供了配置文件路径，从配置文件中读取参数并更新
     if args.config is not None:

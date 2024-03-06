@@ -7,7 +7,8 @@ def main():
     parser = get_parser()
     args = parser.parse_args()
 
-    args.__setattr__("model_name", "GedGNN")
+    args.__setattr__("model_name", "TaGSim")
+    args.__setattr__("gnn_filters", "128-64-32")
     args.__setattr__("dataset", "Linux")
 
     # 如果提供了配置文件路径，从配置文件中读取参数并更新

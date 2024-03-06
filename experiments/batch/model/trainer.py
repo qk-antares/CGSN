@@ -11,6 +11,7 @@ from texttable import Texttable
 from tqdm import tqdm
 
 from experiments.batch.model.cgsn.CGSN import CGSN
+from experiments.batch.model.cgsn.CGSNGin import CGSNGin
 from experiments.batch.model.cgsn.CGSNImproved import CGSNImproved
 from experiments.batch.model.cgsn.CGSNGCN import CGSNGCN
 from experiments.batch.model.cgsn.CGSNOneAtt import CGSNOneAtt
@@ -35,6 +36,8 @@ class Trainer(object):
     def setup_model(self):
         if self.args.model_name == "CGSN":
             self.model = CGSN(self.args, self.dataset.onehot_dim).to(self.device)
+        if self.args.model_name == "CGSNGin":
+            self.model = CGSNGin(self.args, self.dataset.onehot_dim).to(self.device)
         elif self.args.model_name == "CGSNGCN":
             self.model = CGSNGCN(self.args, self.dataset.onehot_dim).to(self.device)
         elif self.args.model_name == "CGSNOneAtt":

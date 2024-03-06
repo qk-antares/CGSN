@@ -8,6 +8,7 @@
             "program": "${workspaceFolder}/experiments/batch/main.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/experiments/batch",
+            "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
